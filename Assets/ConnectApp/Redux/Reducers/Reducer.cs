@@ -61,7 +61,8 @@ namespace ConnectApp.redux.reducers {
                         HistoryManager.searchArticleHistoryList(userId: action.loginInfo.userId);
                     state.articleState.blockArticleList =
                         HistoryManager.blockArticleList(userId: action.loginInfo.userId);
-
+                    state.userState.blockUserIdSet =
+                        HistoryManager.blockUserIdSet(action.loginInfo.userId);
                     break;
                 }
 
@@ -84,6 +85,8 @@ namespace ConnectApp.redux.reducers {
                         HistoryManager.searchArticleHistoryList(userId: action.loginInfo.userId);
                     state.articleState.blockArticleList =
                         HistoryManager.blockArticleList(userId: action.loginInfo.userId);
+                    state.userState.blockUserIdSet =
+                        HistoryManager.blockUserIdSet(action.loginInfo.userId);
                     break;
                 }
 
@@ -101,12 +104,14 @@ namespace ConnectApp.redux.reducers {
                     MyReactionsManager.clearData();
                     state.loginState.loginInfo = new LoginInfo();
                     state.loginState.isLoggedIn = false;
+                    state.loginState.newNotifications = null;
                     UserInfoManager.clearUserInfo();
                     BuglyAgent.SetUserId("anonymous");
                     state.articleState.articleHistory = HistoryManager.articleHistoryList();
                     state.eventState.eventHistory = HistoryManager.eventHistoryList();
                     state.searchState.searchArticleHistoryList = HistoryManager.searchArticleHistoryList();
                     state.articleState.blockArticleList = HistoryManager.blockArticleList();
+                    state.userState.blockUserIdSet = HistoryManager.blockUserIdSet();
                     state.favoriteState.favoriteTagIdDict = new Dictionary<string, List<string>>();
                     state.favoriteState.favoriteTagDict = new Dictionary<string, FavoriteTag>();
                     state.favoriteState.favoriteDetailArticleIdDict = new Dictionary<string, List<string>>();
@@ -440,7 +445,13 @@ namespace ConnectApp.redux.reducers {
                     state.articleState.blockArticleList = blockArticleList;
                     break;
                 }
-
+                
+                case BlockUserAction action: {
+                    state.userState.blockUserIdSet =  HistoryManager.updateBlockUserId(action.blockUserId,
+                        currentUserId: state.loginState.loginInfo.userId, remove: action.remove);
+                    break;
+                }
+                
                 case FetchArticleCommentsSuccessAction action: {
                     var channelMessageList = new Dictionary<string, List<string>>();
                     var channelMessageDict = new Dictionary<string, Dictionary<string, Message>>();
@@ -1796,6 +1807,13 @@ namespace ConnectApp.redux.reducers {
                     break;
                 }
 
+                case MainNavigatorPushToGameDetailAction action: {
+                    Router.navigator.push(new CustomPageRoute(
+                        context => new GameDetailScreenConnector(gameId: action.gameId)
+                    ));
+
+                    break;
+                }
 
                 case MainNavigatorPushToLeaderBoardDetailAction action: {
                     if (action.id.isNotEmpty()) {
@@ -3949,6 +3967,47 @@ namespace ConnectApp.redux.reducers {
                 case FetchChannelMentionQuerySuccessAction action: {
                     state.channelState.queryMentions = action.members;
                     state.channelState.mentionSearching = false;
+                    break;
+                }
+
+                case StartFetchGameAction _: {
+                    state.gameState.gameLoading = true;
+                    break;
+                }
+
+                case FetchGameSuccessAction action: {
+                    state.gameState.gameLoading = false;
+                    if (action.pageNumber == 1) {
+                        state.gameState.gameIds = action.gameIds;
+                    }
+                    else {
+                        var gameIds = state.gameState.gameIds;
+                        gameIds.AddRange(collection: action.gameIds);
+                        state.gameState.gameIds = gameIds;
+                    }
+
+                    state.gameState.gameHasMore = action.hasMore;
+                    state.gameState.gamePage = action.pageNumber;
+                    break;
+                }
+
+                case FetchGameFailureAction _: {
+                    state.gameState.gameLoading = false;
+                    break;
+                }
+
+                case StartFetchGameDetailAction _: {
+                    state.gameState.gameDetailLoading = true;
+                    break;
+                }
+
+                case FetchGameDetailSuccessAction action: {
+                    state.gameState.gameDetailLoading = false;
+                    break;
+                }
+
+                case FetchGameDetailFailureAction _: {
+                    state.gameState.gameDetailLoading = false;
                     break;
                 }
             }

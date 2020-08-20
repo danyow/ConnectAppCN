@@ -63,6 +63,7 @@ namespace ConnectApp.screens {
 
     class _LeaderBoardColumnScreenState : State<LeaderBoardColumnScreen> {
         const int firstPageNumber = 1;
+        int leaderBoardColumnPageNumber = firstPageNumber;
         bool _isLoading;
 
         public override void initState() {
@@ -82,8 +83,8 @@ namespace ConnectApp.screens {
 
             if (notification.metrics.pixels >= notification.metrics.maxScrollExtent && !this._isLoading) {
                 this.setState(() => this._isLoading = true);
-                var pageNumber = this.widget.viewModel.columnPageNumber + 1;
-                this.widget.actionModel.fetchColumn(arg: pageNumber)
+                this.leaderBoardColumnPageNumber++;
+                this.widget.actionModel.fetchColumn(arg: this.leaderBoardColumnPageNumber)
                     .Then(() => this.setState(() => this._isLoading = false))
                     .Catch(_ => this.setState(() => this._isLoading = false));
             }
@@ -137,9 +138,10 @@ namespace ConnectApp.screens {
                     endView = new Visibility(
                         visible: this._isLoading,
                         child: new Container(
+                            color: CColors.Background,
                             padding: EdgeInsets.symmetric(16),
                             child: new CustomActivityIndicator(
-                                loadingColor: LoadingColor.white,
+                                loadingColor: LoadingColor.black,
                                 animating: this._isLoading ? AnimatingType.repeat : AnimatingType.reset
                             )
                         )

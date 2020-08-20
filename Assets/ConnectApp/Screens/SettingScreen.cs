@@ -6,6 +6,7 @@ using ConnectApp.Main;
 using ConnectApp.Models.ActionModel;
 using ConnectApp.Models.State;
 using ConnectApp.Models.ViewModel;
+using ConnectApp.Plugins;
 using ConnectApp.redux.actions;
 using ConnectApp.Utils;
 using Unity.UIWidgets.foundation;
@@ -68,9 +69,12 @@ namespace ConnectApp.screens {
     }
 
     public class _SettingScreenState : State<SettingScreen> {
+
+        bool fpsLabelIsOpen;
         public override void initState() {
             base.initState();
             StatusBarManager.statusBarStyle(false);
+            this.fpsLabelIsOpen = LocalDataManager.getFPSLabelStatus();
         }
 
         public override Widget build(BuildContext context) {
@@ -145,6 +149,17 @@ namespace ConnectApp.screens {
                                     }
                                 );
                             }),
+                            _buildGapView(),
+                            _switchRow(
+                                CCommonUtils.isIPhone ? "帧率监测" : "帧率监测 (暂仅支持 TinyGame)",
+                                value: this.fpsLabelIsOpen,
+                                value => {
+                                    LocalDataManager.setFPSLabelStatus(isOpen: value);
+                                    this.fpsLabelIsOpen = value;
+                                    this.setState(() => {});
+                                    FPSLabelPlugin.SwitchFPSLabelShowStatus(isOpen: value);
+                                }
+                            ),
                             this.widget.viewModel.isLoggedIn ? _buildGapView() : new Container(),
                             this.widget.viewModel.isLoggedIn ? this._buildLogoutBtn() : new Container()
                         }
@@ -197,6 +212,26 @@ namespace ConnectApp.screens {
                 title: title,
                 trailing: CustomListTileConstant.defaultTrailing,
                 onTap: onTap
+            );
+        }
+        
+        static Widget _switchRow(string content, bool value, ValueChanged<bool> onChanged) {
+            return new Container(
+                color: CColors.White,
+                padding: EdgeInsets.symmetric(16, 18),
+                child: new Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: new List<Widget> {
+                        new Expanded(
+                            child: new Text(
+                                data: content,
+                                style: CTextStyle.PLargeBody,
+                                overflow: TextOverflow.ellipsis
+                            )
+                        ),
+                        new CustomSwitch(value: value, onChanged: onChanged, activeColor: CColors.PrimaryBlue)
+                    }
+                )
             );
         }
     }

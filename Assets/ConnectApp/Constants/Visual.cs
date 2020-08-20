@@ -56,7 +56,10 @@ namespace ConnectApp.Constants {
         public static readonly IconData tab_mine_line = new IconData(0xe630, "iconfont");
         public static readonly IconData tab_mine_fill = new IconData(0xe62e, "iconfont");
         public static readonly IconData baseline_forward_arrow = new IconData(0xe601, "iconfont");
-
+        public static readonly IconData outline_share = new IconData(0xe636, "iconfont");
+        public static readonly IconData outline_carousel = new IconData(0xe637, "iconfont");
+        public static readonly IconData outline_list = new IconData(0xe638, "iconfont");
+        
         public static readonly IconData outline_keyboard = new IconData(0xeaf9, "Outline Material Icons");
         public static readonly IconData outline_question_answer = new IconData(0xeaa4, "Outline Material Icons");
         public static readonly IconData outline_time = new IconData(0xebed, "Outline Material Icons");
@@ -530,7 +533,7 @@ namespace ConnectApp.Constants {
         public static readonly Color Green = new Color(0xFF00FF00);
         public static readonly Color Blue = new Color(0xFF0000FF);
         public static readonly Color Grey = new Color(0xFF9E9E9E);
-        public static readonly Color DarkGray = new Color(0xFF7F7F7F);
+        public static readonly Color DarkGray = new Color(0x88FFFFFF);
 
         public static readonly Color Background = new Color(0xFFFAFAFA);
         public static readonly Color Icon = new Color(0xFF979A9E);

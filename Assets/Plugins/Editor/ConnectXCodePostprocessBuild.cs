@@ -1,3 +1,4 @@
+#if UNITY_IOS
 using System.IO;
 using System.Text;
 using ConnectApp.Constants;
@@ -39,21 +40,6 @@ namespace Plugins.Editor {
             File.WriteAllText(pbxPath, sb.ToString());
         }
 
-        const string Entitlements = @"
-<?xml version=""1.0"" encoding=""UTF-8""?>
-<!DOCTYPE plist PUBLIC ""-//Apple//DTD PLIST 1.0//EN"" ""http://www.apple.com/DTDs/PropertyList-1.0.dtd"">
-<plist version=""1.0"">
-<dict>
-    <key>aps-environment</key>
-    <string>development</string>
-    <key>com.apple.developer.associated-domains</key>
-    <array>
-        <string>applinks:connect-download.unity.com</string>
-        <string>applinks:connect.unity.com</string>
-    </array>
-</dict>
-</plist>";
-
         static void ModifyPbxProject(string path) {
             var projPath = PBXProject.GetPBXProjectPath(buildPath: path);
             var proj = new PBXProject();
@@ -72,6 +58,8 @@ namespace Plugins.Editor {
                 value: "$(PROJECT_DIR)/Libraries/Plugins/iOS/WeChatSDK1.8.4");
             proj.AddBuildProperty(targetGuid: targetGuid, name: "LIBRARY_SEARCH_PATHS",
                 value: "$(PROJECT_DIR)/Libraries/Plugins/iOS/Bugly");
+            proj.AddBuildProperty(targetGuid: targetGuid, name: "LIBRARY_SEARCH_PATHS",
+                value: "$(PROJECT_DIR)/Libraries/Plugins/iOS/FPSLabel");
 
             // Add Framework
             proj.AddFrameworkToProject(targetGuid: targetGuid, framework: "libz.tbd", weak: true);
@@ -85,18 +73,13 @@ namespace Plugins.Editor {
             proj.AddFrameworkToProject(targetGuid: targetGuid, framework: "MediaPlayer.framework", weak: true);
             proj.AddFrameworkToProject(targetGuid: targetGuid, framework: "Photos.framework", weak: false);
             proj.AddFrameworkToProject(targetGuid: targetGuid, framework: "SafariServices.framework", weak: false);
+            proj.AddFrameworkToProject(targetGuid: targetGuid, framework: "WebKit.framework", weak: false);
 
             // Update Build Setting
             proj.SetBuildProperty(targetGuid: targetGuid, name: "ENABLE_BITCODE", value: "NO");
             proj.AddBuildProperty(targetGuid: targetGuid, name: "OTHER_LDFLAGS", value: "-all_load");
             proj.AddBuildProperty(targetGuid: targetGuid, name: "OTHER_LDFLAGS", value: "-ObjC");
-
-            // Add Entitlements
-            const string fileName = "unityconnect.entitlements";
-            var filePath = Path.Combine(path1: path, path2: fileName);
-            File.WriteAllText(path: filePath, contents: Entitlements);
-            proj.AddFile(path: filePath, projectPath: fileName);
-            proj.SetBuildProperty(targetGuid: targetGuid, name: "CODE_SIGN_ENTITLEMENTS", value: fileName);
+            
             // save changed
             File.WriteAllText(path: projPath, contents: proj.WriteToString());
 
@@ -199,9 +182,6 @@ namespace Plugins.Editor {
             PlistElementDict dictTmp = rootDict.CreateDict(key: atsKey);
             dictTmp.SetBoolean("NSAllowsArbitraryLoads", true);
 
-            PlistElementArray backModes = rootDict.CreateArray("UIBackgroundModes");
-            backModes.AddString("remote-notification");
-
             // 出口合规信息
             rootDict.SetBoolean("ITSAppUsesNonExemptEncryption", false);
 
@@ -221,3 +201,4 @@ namespace Plugins.Editor {
         }
     }
 }
+#endif

@@ -55,6 +55,9 @@ namespace ConnectApp.screens {
                         }),
                         unFollowUser = unFollowUserId =>
                             dispatcher.dispatch<IPromise>(Actions.fetchUnFollowUser(unFollowUserId: unFollowUserId)),
+                        pushToLogin = () => dispatcher.dispatch(new MainNavigatorPushToAction {
+                            routeName = MainNavigatorRoutes.Login
+                        }),
                         pushToUserDetail = userId => dispatcher.dispatch(new MainNavigatorPushToUserDetailAction {
                             userId = userId
                         })
@@ -84,6 +87,7 @@ namespace ConnectApp.screens {
 
     class _BloggerScreenState : State<BloggerScreen>, RouteAware {
         const int firstPageNumber = 1;
+        int bloggerPageNumber = firstPageNumber;
         RefreshController _refreshController;
 
         public override void initState() {
@@ -106,8 +110,8 @@ namespace ConnectApp.screens {
         }
 
         void _onRefresh(bool up) {
-            var bloggerPageNumber = up ? firstPageNumber : this.widget.viewModel.bloggerPageNumber + 1;
-            this.widget.actionModel.fetchBlogger(arg: bloggerPageNumber)
+            this.bloggerPageNumber = up ? firstPageNumber : this.bloggerPageNumber + 1;
+            this.widget.actionModel.fetchBlogger(arg: this.bloggerPageNumber)
                 .Then(() => this._refreshController.sendBack(up: up, up ? RefreshStatus.completed : RefreshStatus.idle))
                 .Catch(_ => this._refreshController.sendBack(up: up, mode: RefreshStatus.failed));
         }

@@ -58,7 +58,6 @@ namespace ConnectApp.screens {
                                 fullscreen = true,
                                 showOpenInBrowser = false
                             });
-
                         }
                     };
                     return new ArticlesScreen(viewModel: viewModel, actionModel: actionModel);
@@ -148,6 +147,7 @@ namespace ConnectApp.screens {
             if (this._selectedIndex == 0) {
                 this._followArticlePixels = pixels;
             }
+
             if (this._selectedIndex == 1) {
                 this._recommendArticlePixels = pixels;
             }
@@ -179,13 +179,14 @@ namespace ConnectApp.screens {
             if (pixels > MediaQuery.of(context: this.context).size.height) {
                 if (!this._isRefresh) {
                     this._isRefresh = true;
-                    EventBus.publish(sName: EventBusConstant.article_refresh, new List<object>{TabBarItemStatus.toRefresh});
+                    EventBus.publish(sName: EventBusConstant.article_refresh,
+                        new List<object> {TabBarItemStatus.toRefresh});
                 }
             }
             else {
                 if (this._isRefresh) {
                     this._isRefresh = false;
-                    EventBus.publish(sName: EventBusConstant.article_refresh, new List<object>{status});
+                    EventBus.publish(sName: EventBusConstant.article_refresh, new List<object> {status});
                 }
             }
         }
@@ -251,7 +252,7 @@ namespace ConnectApp.screens {
                         new CustomButton(
                             padding: EdgeInsets.only(16, 8, 16, 8),
                             onPressed: () => this.widget.actionModel.pushToGame(),
-                            child: Image.asset("image/lantern-egg")
+                            child: new GamepadButton()
                         )
                     }
                 )
@@ -281,17 +282,22 @@ namespace ConnectApp.screens {
                         this.setState(() => this._selectedIndex = newValue);
                         if (newValue == 0) {
                             AnalyticsManager.AnalyticsClickHomeFocus();
-                            this._changeTabBarItemStatus(pixels: this._followArticlePixels, status: TabBarItemStatus.normal);
+                            this._changeTabBarItemStatus(pixels: this._followArticlePixels,
+                                status: TabBarItemStatus.normal);
                         }
+
                         if (newValue == 1) {
-                            this._changeTabBarItemStatus(pixels: this._recommendArticlePixels, status: TabBarItemStatus.normal);
+                            this._changeTabBarItemStatus(pixels: this._recommendArticlePixels,
+                                status: TabBarItemStatus.normal);
                         }
                     },
                     1,
                     trailing: this._buildTrailing(),
                     headerDecoration: new BoxDecoration(
                         color: CColors.White,
-                        border: new Border(bottom: new BorderSide(this._navBarHeight <= 0 ? CColors.Separator2 : CColors.Transparent))
+                        border: new Border(bottom: new BorderSide(this._navBarHeight <= 0
+                            ? CColors.Separator2
+                            : CColors.Transparent))
                     ),
                     indicator: new CustomGradientsTabIndicator(
                         insets: EdgeInsets.symmetric(horizontal: 8),
@@ -310,11 +316,11 @@ namespace ConnectApp.screens {
                     selectedColor: CColors.TextTitle,
                     unselectedColor: CColors.TextBody4,
                     unselectedTextStyle: new TextStyle(
-                        fontSize: 20,
+                        fontSize: 18,
                         fontFamily: "Roboto-Medium"
                     ),
                     selectedTextStyle: new TextStyle(
-                        fontSize: 20,
+                        fontSize: 18,
                         fontFamily: "Roboto-Medium"
                     ),
                     controller: this._tabController,
@@ -391,7 +397,7 @@ namespace ConnectApp.screens {
                         new CustomButton(
                             padding: EdgeInsets.only(8, 8, 16, 8),
                             onPressed: () => this.widget.actionModel.pushToGame(),
-                            child: Image.asset("image/lantern-egg")
+                            child: Image.asset("image/egg-gamepad")
                         )
                     }
                 )

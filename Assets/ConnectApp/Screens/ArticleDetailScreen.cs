@@ -101,6 +101,9 @@ namespace ConnectApp.screens {
                             dispatcher.dispatch(new BlockArticleAction {articleId = articleId});
                             dispatcher.dispatch(new DeleteArticleHistoryAction {articleId = articleId});
                         },
+                        blockUser = userId => {
+                            dispatcher.dispatch(new BlockUserAction {blockUserId = userId});
+                        },
                         startFetchArticleDetail = () => dispatcher.dispatch(new StartFetchArticleDetailAction()),
                         fetchArticleDetail = id =>
                             dispatcher.dispatch<IPromise>(
@@ -308,6 +311,7 @@ namespace ConnectApp.screens {
                 contentWidget = new CustomMarkdown(
                     markdownStyleSheet: MarkdownUtils.defaultStyle(),
                     data: this._article.markdownPreviewBody,
+                    syntaxHighlighter: new markdown.CSharpSyntaxHighlighter(),
                     onTapLink: url => this.widget.actionModel.openUrl(url), contentHead: contentHead,
                     relatedArticles: relatedArticles, commentList: comments, refreshController: this._refreshController,
                     enablePullUp: this._article.hasMore, enablePullDown: false,
@@ -419,31 +423,25 @@ namespace ConnectApp.screens {
             var originItems = new List<Widget> {
                 this._buildContentHead()
             };
-            if (this._article.bodyType == "markdown" && this._article.markdownBody.isNotEmpty()) {
-                originItems.Add(new Markdown(null, this._article.markdownBody,
-                    onTapLink: url => this.widget.actionModel.openUrl(url)));
-            }
-            else {
-                originItems.AddRange(
-                    ContentDescription.map(
-                        context: context,
-                        cont: this._article.body,
-                        contentMap: this._article.contentMap,
-                        this._article.videoSliceMap,
-                        this._article.videoPosterMap,
-                        openUrl: this.widget.actionModel.openUrl,
-                        playVideo: this.widget.actionModel.playVideo,
-                        this.widget.actionModel.pushToLogin,
-                        UserInfoManager.isLogin()
-                            ? CCommonUtils.GetUserLicense(UserInfoManager.getUserInfo().userId,
-                                this.widget.viewModel.userLicenseDict)
-                            : "",
-                        this.widget.actionModel.browserImage
-                    )
-                );
-            }
-
-
+            
+            originItems.AddRange(
+                ContentDescription.map(
+                    context: context,
+                    cont: this._article.body,
+                    contentMap: this._article.contentMap,
+                    this._article.videoSliceMap,
+                    this._article.videoPosterMap,
+                    openUrl: this.widget.actionModel.openUrl,
+                    playVideo: this.widget.actionModel.playVideo,
+                    this.widget.actionModel.pushToLogin,
+                    UserInfoManager.isLogin()
+                        ? CCommonUtils.GetUserLicense(UserInfoManager.getUserInfo().userId,
+                            this.widget.viewModel.userLicenseDict)
+                        : "",
+                    this.widget.actionModel.browserImage
+                )
+            );
+            
             // originItems.Add(this._buildActionCards(this._article.like));
             originItems.Add(this._buildRelatedArticles());
             commentIndex = originItems.Count;
@@ -643,6 +641,10 @@ namespace ConnectApp.screens {
         }
 
         bool _onUserNotification(UserScrollNotification notification) {
+            var axisDirection = notification.metrics.axisDirection;
+            if (axisDirection == AxisDirection.left || axisDirection == AxisDirection.right) {
+                return true;
+            }
             if (notification.direction == ScrollDirection.reverse) {
                 if (!this._isPullUp) {
                     this.setState(() => this._isPullUp = true);
@@ -932,7 +934,6 @@ namespace ConnectApp.screens {
             if (this.widget.viewModel.channelMessageList.ContainsKey(key: this._article.channelId)) {
                 channelComments = this.widget.viewModel.channelMessageList[key: this._article.channelId];
             }
-
             var mediaQuery = MediaQuery.of(this.context);
             var comments = new List<Widget> {
                 new Container(
@@ -979,6 +980,9 @@ namespace ConnectApp.screens {
                 }
 
                 var message = messageDict[key: commentId];
+                if (HistoryManager.isBlockUser(userId: message.author.id)) { // is block user
+                    continue;
+                }
                 var userLicense = CCommonUtils.GetUserLicense(userId: message.author.id,
                     userLicenseMap: this.widget.viewModel.userLicenseDict);
                 bool isPraised = _isPraised(message: message, loginUserId: this.widget.viewModel.loginUserId);
@@ -1018,9 +1022,11 @@ namespace ConnectApp.screens {
                     parentAuthorId: parentAuthorId,
                     () => ReportManager.showReportView(
                         isLoggedIn: this.widget.viewModel.isLoggedIn,
+                        userName: message.author.fullName,
                         reportType: ReportType.comment,
                         () => this.widget.actionModel.pushToLogin(),
-                        () => this.widget.actionModel.pushToReport(arg1: commentId, arg2: ReportType.comment)
+                        () => this.widget.actionModel.pushToReport(arg1: commentId, arg2: ReportType.comment),
+                        blockUserCallback: () => this.widget.actionModel.blockUser(obj: message.author.id)
                     ),
                     replyCallBack: () => this._sendComment(
                         "Article_Comment",
@@ -1046,6 +1052,19 @@ namespace ConnectApp.screens {
                 comments.Add(item: card);
             }
 
+            // fix when only has one comment, blocked it show empty view 
+            if (comments.Count == 1) {
+                var blankView = new Container(
+                    height: height - titleHeight,
+                    child: new BlankView(
+                        "快来写下第一条评论吧",
+                        "image/default-comment"
+                    )
+                );
+                comments.Add(item: blankView);
+                return comments;
+            }
+            
             float endHeight = 0;
             if (!this._article.hasMore) {
                 comments.Add(new EndView());
@@ -1145,7 +1164,6 @@ namespace ConnectApp.screens {
             if (this.widget.viewModel.articleId.isNotEmpty()) {
                 CTemporaryValue.currentPageModelId = this.widget.viewModel.articleId;
             }
-
             StatusBarManager.statusBarStyle(false);
         }
 
